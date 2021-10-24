@@ -20,6 +20,8 @@ add_executable(RecentFileExplorer WIN32
 	src/main.cc
 	include/RecentFileModel.hh
 	src/RecentFileModel.cc
+	include/KeyPressHandler.hh
+	src/KeyPressHandler.cc
 	resource.rc
 	resource.qrc
 	BreezeStyleSheets/breeze.qrc

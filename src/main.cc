@@ -1,7 +1,5 @@
 #include <filesystem>
 
-#include <windows.h>
-
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
 #include <QtWidgets/QApplication>
@@ -11,6 +9,8 @@
 #include <QtGui/QIcon>
 
 #include <RecentFileModel.hh>
+#include <util.hh>
+#include <KeyPressHandler.hh>
 
 QScreen* get_active_screen(const QWidget* pWidget) {
 	QScreen* pActive = nullptr;
@@ -33,10 +33,9 @@ QListView* create_recent_file_view(const std::filesystem::path& root) {
 	view->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 	QObject::connect(view, &QListView::doubleClicked, [](const QModelIndex& i){
-		ShellExecute(0, 0,
-			i.data(Qt::UserRole).toString().toLocal8Bit(),
-		0, 0, SW_SHOW);
+		default_run(i.data(Qt::UserRole).toString());
 	});
+	view->installEventFilter(new KeyPressHandler);
 	return view;
 }
 
