@@ -1,25 +1,32 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.17)
 project(RecentFileExplorer)
 
 add_compile_options(-Wall -Wextra -pedantic)
-set(CMAKE_CXX_STANDARD 20)
-
+set(CMAKE_CXX_STANDARD 17)
 set(BUILD_SFX "${PLATFORM}/${CMAKE_BUILD_TYPE}")
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+cmake_policy(SET CMP0100 NEW)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 include_directories(
 	include
-#	"${Dependency_ROOT}/include"
 )
 
-#find_library(Dependency_LIB lib_name "${Dependency_ROOT}/lib/${BUILD_SFX}")
-
-add_executable(RecentFileExplorer
+add_executable(RecentFileExplorer WIN32
 	src/main.cc
+	include/RecentFileModel.hh
+	src/RecentFileModel.cc
+	resource.rc
+	resource.qrc
 )
 
-#target_link_libraries(RecentFileExplorer
-#	"${Dependency_LIB}"
-#)
+target_link_libraries(RecentFileExplorer
+	Qt::Widgets
+)
 
 install(TARGETS
 	RecentFileExplorer

@@ -1,13 +1,55 @@
-// #include sections:
-/* std headers */
+#include <filesystem>
 
-/* 3rd party headers */
+#include <windows.h>
 
-/* authored library headers */
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QListView>
+#include <QtGui/QScreen>
+#include <QtGui/QWindow>
+#include <QtGui/QIcon>
 
-/* current project headers */
+#include <RecentFileModel.hh>
 
-/* header of current source */
+QScreen* get_active_screen(const QWidget* pWidget) {
+	QScreen* pActive = nullptr;
+	while (pWidget) {
+		auto w = pWidget->windowHandle();
+		if (w != nullptr) {
+			pActive = w->screen();
+			break;
+		} else
+			pWidget = pWidget->parentWidget();
+	}
+	return pActive;
+}
+
+QListView* create_recent_file_view(const std::filesystem::path& root) {
+	auto* view = new QListView;
+	auto* model = new RecentFileModel{root};
+	view->setModel(model);
+	view->setDragDropMode(QAbstractItemView::DragOnly);
+	view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+	QObject::connect(view, &QListView::doubleClicked, [](const QModelIndex& i){
+		ShellExecute(0, 0,
+			i.data(Qt::UserRole).toString().toLocal8Bit(),
+		0, 0, SW_SHOW);
+	});
+	return view;
+}
 
 int main(int argc, char** argv) {
+	if (argc != 2 || !std::filesystem::is_directory(argv[1]))
+		return 1;
+
+	QApplication::setApplicationName("RecentFileExplorer");
+	QApplication app{argc, argv};
+	QApplication::setWindowIcon(QIcon{":/icon.png"});
+
+	auto* view = create_recent_file_view(argv[1]);
+	view->show();
+	if(const auto* screen = get_active_screen(view); screen)
+		view->resize(screen->availableSize() / 3.0);
+
+	app.exec();
 }
