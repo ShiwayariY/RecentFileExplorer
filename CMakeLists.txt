@@ -22,6 +22,7 @@ add_executable(RecentFileExplorer WIN32
 	src/RecentFileModel.cc
 	resource.rc
 	resource.qrc
+	BreezeStyleSheets/breeze.qrc
 )
 
 target_link_libraries(RecentFileExplorer

@@ -2,6 +2,8 @@
 
 #include <windows.h>
 
+#include <QtCore/QFile>
+#include <QtCore/QTextStream>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QListView>
 #include <QtGui/QScreen>
@@ -38,6 +40,13 @@ QListView* create_recent_file_view(const std::filesystem::path& root) {
 	return view;
 }
 
+void load_stylesheet(QApplication& app) {
+	QFile ssfile(":/dark/stylesheet.qss");
+	ssfile.open(QFile::ReadOnly | QFile::Text);
+	QTextStream ssstream(&ssfile);
+	app.setStyleSheet(ssstream.readAll());
+}
+
 int main(int argc, char** argv) {
 	if (argc != 2 || !std::filesystem::is_directory(argv[1]))
 		return 1;
@@ -45,6 +54,7 @@ int main(int argc, char** argv) {
 	QApplication::setApplicationName("RecentFileExplorer");
 	QApplication app{argc, argv};
 	QApplication::setWindowIcon(QIcon{":/icon.png"});
+	load_stylesheet(app);
 
 	auto* view = create_recent_file_view(argv[1]);
 	view->show();
