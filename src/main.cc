@@ -25,6 +25,11 @@ QScreen* get_active_screen(const QWidget* pWidget) {
 	return pActive;
 }
 
+std::filesystem::path dirname(const std::filesystem::path& p) {
+	auto abs = std::filesystem::absolute(p);
+	return std::filesystem::relative(abs, abs.parent_path());
+}
+
 QListView* create_recent_file_view(const std::filesystem::path& root) {
 	auto* view = new QListView;
 	auto* model = new RecentFileModel{root};
@@ -36,6 +41,7 @@ QListView* create_recent_file_view(const std::filesystem::path& root) {
 		default_run(i.data(Qt::UserRole).toString());
 	});
 	view->installEventFilter(new KeyPressHandler);
+	view->setWindowTitle(QString::fromStdString(dirname(root).string()));
 	return view;
 }
 
