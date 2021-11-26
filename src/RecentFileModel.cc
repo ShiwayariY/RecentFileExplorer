@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <QtGui/QFont>
 #include <QtCore/QList>
 #include <QtCore/QUrl>
@@ -9,20 +11,14 @@ RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* par
 			load_files(root);
 }
 
-bool RecentFileModel::DateCmp::operator() (const std::filesystem::path& lhs, const std::filesystem::path& rhs) const {
-	return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);
-}
-
 void RecentFileModel::load_files(const std::filesystem::path& root) {
 	for(const auto& file : std::filesystem::recursive_directory_iterator(root))
 		if(file.is_regular_file())
-			m_files.insert(std::filesystem::absolute(file));
+			m_files.push_back(std::filesystem::absolute(file));
 
-	m_files_v.reserve(m_files.size());
-	std::transform(std::begin(m_files), std::end(m_files),
-		std::back_inserter(m_files_v),
-		[](const std::filesystem::path& file){
-			return &file;
+	std::sort(std::begin(m_files), std::end(m_files),
+		[](const std::filesystem::path& lhs, const std::filesystem::path& rhs){
+			return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);
 		});
 }
 
@@ -32,7 +28,7 @@ int RecentFileModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant RecentFileModel::data(const QModelIndex& index, int role) const {
-	const auto& path = *(m_files_v[index.row()]);
+	const auto& path = m_files[index.row()];
 	switch (role) {
 		case Qt::DisplayRole:
 			return QString::fromStdString(path.filename().string());

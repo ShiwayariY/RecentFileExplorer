@@ -12,11 +12,7 @@
 class RecentFileModel : public QAbstractListModel {
 	Q_OBJECT
 
-	struct DateCmp {
-		bool operator() (const std::filesystem::path& lhs, const std::filesystem::path& rhs) const;
-	};
-	std::set<std::filesystem::path, DateCmp> m_files;
-	std::vector<const std::filesystem::path*> m_files_v;
+	std::vector<std::filesystem::path> m_files;
 
 public:
 	explicit RecentFileModel(const std::filesystem::path& root, QObject* parent = nullptr);
