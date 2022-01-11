@@ -10,11 +10,6 @@ Opens a list view of all files in the current directory *and its subdirectories,
 
 # Install / Compile
 
-Requires an installed version of [Qt5](https://www.qt.io/) to compile. Compile with CMake by running the following in the repository root:
-```
-mkdir build
-cd build
-cmake ..
-make
-make install
-```
+Requires an installed version of [Qt5](https://www.qt.io/) to compile. Compile with [`init_cpp_project`](https://github.com/ShiwayariY/init_cpp_project):
+- Put `init_cpp_project` root on the `PATH`
+- run `mk build` then `mk`
