@@ -1,6 +1,6 @@
 Opens a list view of all files in the current directory *and its subdirectories, recursively*, sorted by modification date, newest first.
 
-**NOTE**: Opening the view ***may be slow*** in directories close to the volume root, due to *recursive*
+**NOTE**: Opening the view ***may be slow*** in directories close to the volume root, due to *recursively* listing *all* files
 
 # Usage
 - simple keyboard navigation with arrow keys etc.
