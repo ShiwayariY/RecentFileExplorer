@@ -4,6 +4,8 @@
 #include <QtCore/QList>
 #include <QtCore/QUrl>
 
+#include <util.hh>
+
 #include <RecentFileModel.hh>
 
 RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* parent) :
@@ -12,10 +14,31 @@ RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* par
 }
 
 void RecentFileModel::load_files(const std::filesystem::path& root) {
-	for(const auto& file : std::filesystem::recursive_directory_iterator(root))
-		if(file.is_regular_file())
-			m_files.push_back(std::filesystem::absolute(file));
+	recursively_add_all_files(root);
+	remove_files_with_same_name_and_content();
+	sort_by_write_time();
+}
 
+void RecentFileModel::recursively_add_all_files(const std::filesystem::path& root) {
+	for (const auto& file : std::filesystem::recursive_directory_iterator(root)) {
+		if (file.is_regular_file())
+			m_files.push_back(std::filesystem::absolute(file));
+	}
+}
+
+void RecentFileModel::remove_files_with_same_name_and_content() {
+	std::sort(m_files.begin(), m_files.end(),
+	  [](const auto& lhs, const auto& rhs) {
+		  return lhs.filename() < rhs.filename();
+	  });
+	auto last = std::unique(m_files.begin(), m_files.end(),
+	  [](const auto& lhs, const auto& rhs) {
+		  return (lhs.filename() == rhs.filename()) && identical_file(lhs, rhs);
+	  });
+	m_files.erase(last, m_files.end());
+}
+
+void RecentFileModel::sort_by_write_time() {
 	std::sort(std::begin(m_files), std::end(m_files),
 	  [](const std::filesystem::path& lhs, const std::filesystem::path& rhs) {
 		  return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);

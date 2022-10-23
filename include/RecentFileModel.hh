@@ -18,6 +18,9 @@ public:
 	explicit RecentFileModel(const std::filesystem::path& root, QObject* parent = nullptr);
 
 	void load_files(const std::filesystem::path& root);
+	void recursively_add_all_files(const std::filesystem::path& root);
+	void remove_files_with_same_name_and_content();
+	void sort_by_write_time();
 	int rowCount(const QModelIndex& parent) const override;
 	QVariant data(const QModelIndex& index, int role) const override;
 	QStringList mimeTypes() const override;
