@@ -6,9 +6,9 @@
 
 #include <RecentFileModel.hh>
 
-RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* parent)
-		: QAbstractListModel(parent) {
-			load_files(root);
+RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* parent) :
+		QAbstractListModel(parent) {
+	load_files(root);
 }
 
 void RecentFileModel::load_files(const std::filesystem::path& root) {
@@ -17,13 +17,13 @@ void RecentFileModel::load_files(const std::filesystem::path& root) {
 			m_files.push_back(std::filesystem::absolute(file));
 
 	std::sort(std::begin(m_files), std::end(m_files),
-		[](const std::filesystem::path& lhs, const std::filesystem::path& rhs){
-			return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);
-		});
+	  [](const std::filesystem::path& lhs, const std::filesystem::path& rhs) {
+		  return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);
+	  });
 }
 
 int RecentFileModel::rowCount(const QModelIndex& parent) const {
-	if(!parent.isValid()) return m_files.size();
+	if (!parent.isValid()) return m_files.size();
 	return 0;
 }
 
@@ -51,11 +51,10 @@ QStringList RecentFileModel::mimeTypes() const {
 QMimeData* RecentFileModel::mimeData(const QModelIndexList& indices) const {
 	QMimeData* mime = new QMimeData;
 	QList<QUrl> urls;
-	for(const auto& i : indices)
-		if(i.isValid()) 
+	for (const auto& i : indices)
+		if (i.isValid())
 			urls.append(QUrl::fromLocalFile(
-				data(i, Qt::UserRole).toString()
-			));
+			  data(i, Qt::UserRole).toString()));
 	mime->setUrls(urls);
 	return mime;
 }
