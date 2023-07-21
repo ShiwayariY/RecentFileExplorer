@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 
 #include <QtGui/QFont>
 #include <QtCore/QList>
@@ -10,39 +11,19 @@
 
 RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* parent) :
 		QAbstractListModel(parent) {
-	load_files(root);
-}
 
-void RecentFileModel::load_files(const std::filesystem::path& root) {
-	recursively_add_all_files(root);
-	remove_files_with_same_name_and_content();
-	sort_by_write_time();
-}
+	auto* loader_thread = new QThread;
+	auto* loader = new FileListLoader{ root };
+	loader->moveToThread(loader_thread);
 
-void RecentFileModel::recursively_add_all_files(const std::filesystem::path& root) {
-	for (const auto& file : std::filesystem::recursive_directory_iterator(root)) {
-		if (file.is_regular_file())
-			m_files.push_back(std::filesystem::absolute(file));
-	}
-}
+	qRegisterMetaType<std::vector<std::filesystem::path>>();
 
-void RecentFileModel::remove_files_with_same_name_and_content() {
-	std::sort(m_files.begin(), m_files.end(),
-	  [](const auto& lhs, const auto& rhs) {
-		  return lhs.filename() < rhs.filename();
-	  });
-	auto last = std::unique(m_files.begin(), m_files.end(),
-	  [](const auto& lhs, const auto& rhs) {
-		  return (lhs.filename() == rhs.filename()) && identical_file(lhs, rhs);
-	  });
-	m_files.erase(last, m_files.end());
-}
-
-void RecentFileModel::sort_by_write_time() {
-	std::sort(std::begin(m_files), std::end(m_files),
-	  [](const std::filesystem::path& lhs, const std::filesystem::path& rhs) {
-		  return std::filesystem::last_write_time(lhs) > std::filesystem::last_write_time(rhs);
-	  });
+	connect(loader, &FileListLoader::send_files, this, &RecentFileModel::receive_files);
+	connect(loader_thread, &QThread::started, loader, &FileListLoader::load_files);
+	connect(loader, &FileListLoader::finished, loader_thread, &QThread::quit);
+	connect(loader, &FileListLoader::finished, loader, &FileListLoader::deleteLater); // as per qt doc,
+	connect(loader_thread, &QThread::finished, loader_thread, &QThread::deleteLater); // but it has issues ..?
+	loader_thread->start();
 }
 
 int RecentFileModel::rowCount(const QModelIndex& parent) const {
@@ -84,4 +65,27 @@ QMimeData* RecentFileModel::mimeData(const QModelIndexList& indices) const {
 
 Qt::ItemFlags RecentFileModel::flags(const QModelIndex& index) const {
 	return QAbstractListModel::flags(index) | Qt::ItemIsDragEnabled;
+}
+
+void RecentFileModel::receive_files(std::vector<std::filesystem::path> files) {
+	beginResetModel();
+	m_files = std::move(files);
+	endResetModel();
+}
+
+// ##################################################
+
+FileListLoader::FileListLoader(std::filesystem::path root) :
+		m_root{ std::move(root) } {}
+
+void FileListLoader::load_files() {
+	std::cout << "listing files .." << std::endl;
+	auto files = recursively_list_all_files(m_root);
+	std::cout << "removing dupes .." << std::endl;
+	remove_files_with_same_name_and_content(files);
+	std::cout << "sorting by write time .." << std::endl;
+	sort_by_write_time(files);
+	std::cout << "finished loading" << std::endl;
+	emit send_files(std::move(files));
+	emit finished();
 }
