@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include <QtGui/QFont>
 #include <QtGui/QBrush>
 #include <QtCore/QList>
 #include <QtCore/QUrl>
+#include <QtCore/QStandardPaths>
 
 #include <util.hh>
 
@@ -95,7 +97,52 @@ void RecentFileModel::receive_files(std::vector<std::filesystem::path> files) {
 	beginResetModel();
 	for(auto& path : files)
 		m_items.emplace_back(std::move(path), 0);
+	load_tags();
 	endResetModel();
+}
+
+std::map<std::filesystem::path, int> RecentFileModel::read_tag_file() {
+	std::map<std::filesystem::path, int> items;
+	std::filesystem::path tagfile_path{ QStandardPaths::writableLocation(QStandardPaths::StandardLocation::AppDataLocation).toStdString() };
+	std::filesystem::create_directories(tagfile_path);
+	tagfile_path /= "tags";
+
+	std::ifstream ifs{ tagfile_path };
+	while(!ifs.eof()) {
+		std::string path, tag_str;
+		if(!std::getline(ifs, path) || !std::getline(ifs, tag_str)) break;
+		try {
+			items.try_emplace(std::filesystem::u8path(path), std::stoi(tag_str));
+		} catch(const std::invalid_argument&) {
+		} catch(const std::out_of_range&) {
+		}
+	}
+	return items;
+}
+
+void RecentFileModel::update_tag_file() const {
+	auto items = read_tag_file();
+	for(const auto& item : m_items) {
+		if(item.tag == 0)
+			items.erase(item.path);
+		else
+			items[item.path] = item.tag;
+	}
+
+	std::filesystem::path tagfile_path{ QStandardPaths::writableLocation(QStandardPaths::StandardLocation::AppDataLocation).toStdString() };
+	tagfile_path /= "tags";
+	std::ofstream ofs{ tagfile_path };
+	for(const auto& [path, tag] : items) {
+		ofs << path.string() << "\n"
+			<< tag << "\n";
+	}
+}
+
+void RecentFileModel::load_tags() {
+	// only call from within a beginResetModel - endResetModel block
+	auto items = read_tag_file();
+	for(auto& item : m_items)
+		if(items.count(item.path)) item.tag = items[item.path];
 }
 
 // ##################################################

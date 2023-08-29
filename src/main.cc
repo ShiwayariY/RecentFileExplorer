@@ -1,5 +1,6 @@
 #include <filesystem>
 
+#include <QtCore/QObject>
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
 #include <QtWidgets/QApplication>
@@ -8,6 +9,7 @@
 #include <QtGui/QWindow>
 #include <QtGui/QIcon>
 
+#include <QListViewWithCleanup.hh>
 #include <RecentFileModel.hh>
 #include <util.hh>
 #include <KeyPressHandler.hh>
@@ -30,16 +32,18 @@ std::filesystem::path dirname(const std::filesystem::path& p) {
 	return std::filesystem::relative(abs, abs.parent_path());
 }
 
-QListView* create_recent_file_view(const std::filesystem::path& root) {
-	auto* view = new QListView;
+QListViewWithCleanup* create_recent_file_view(const std::filesystem::path& root) {
+	auto* view = new QListViewWithCleanup;
 	auto* model = new RecentFileModel{ root };
 	view->setModel(model);
 	view->setDragDropMode(QAbstractItemView::DragOnly);
 	view->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-	QObject::connect(view, &QListView::doubleClicked, [](const QModelIndex& i) {
+	QObject::connect(view, &QListViewWithCleanup::doubleClicked, [](const QModelIndex& i) {
 		default_run(i.data(Qt::UserRole).toString());
 	});
+	QObject::connect(view, &QListViewWithCleanup::do_cleanup, model, &RecentFileModel::update_tag_file);
+
 	view->installEventFilter(new KeyPressHandler);
 	view->setWindowTitle(QString::fromStdString(dirname(root).string()));
 	return view;

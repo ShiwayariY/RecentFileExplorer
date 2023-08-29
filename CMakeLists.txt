@@ -18,6 +18,7 @@ include_directories(
 
 add_executable(RecentFileExplorer WIN32
 	src/main.cc
+	include/QListViewWithCleanup.hh
 	include/RecentFileModel.hh
 	src/RecentFileModel.cc
 	include/KeyPressHandler.hh

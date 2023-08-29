@@ -14,7 +14,6 @@ private:
 	void open_selected(const QListView*) const;
 	void find_item_dialog(QListView*) const;
 	void set_tag(QListView*, int);
-
 };
 
 #endif
