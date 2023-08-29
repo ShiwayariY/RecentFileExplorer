@@ -27,13 +27,13 @@ RecentFileModel::RecentFileModel(const std::filesystem::path& root, QObject* par
 }
 
 int RecentFileModel::rowCount(const QModelIndex& parent) const {
-	if (!parent.isValid()) return m_files.size();
+	if(!parent.isValid()) return m_items.size();
 	return 0;
 }
 
 QVariant RecentFileModel::data(const QModelIndex& index, int role) const {
 	const auto& path = m_files[index.row()];
-	switch (role) {
+	switch(role) {
 		case Qt::DisplayRole:
 			return QString::fromStdString(path.filename().string());
 		case Qt::UserRole:
@@ -55,8 +55,8 @@ QStringList RecentFileModel::mimeTypes() const {
 QMimeData* RecentFileModel::mimeData(const QModelIndexList& indices) const {
 	QMimeData* mime = new QMimeData;
 	QList<QUrl> urls;
-	for (const auto& i : indices)
-		if (i.isValid())
+	for(const auto& i : indices)
+		if(i.isValid())
 			urls.append(QUrl::fromLocalFile(
 			  data(i, Qt::UserRole).toString()));
 	mime->setUrls(urls);

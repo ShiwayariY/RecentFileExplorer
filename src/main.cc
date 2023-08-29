@@ -14,9 +14,9 @@
 
 QScreen* get_active_screen(const QWidget* pWidget) {
 	QScreen* pActive = nullptr;
-	while (pWidget) {
+	while(pWidget) {
 		auto w = pWidget->windowHandle();
-		if (w != nullptr) {
+		if(w != nullptr) {
 			pActive = w->screen();
 			break;
 		} else
@@ -32,12 +32,12 @@ std::filesystem::path dirname(const std::filesystem::path& p) {
 
 QListView* create_recent_file_view(const std::filesystem::path& root) {
 	auto* view = new QListView;
-	auto* model = new RecentFileModel{root};
+	auto* model = new RecentFileModel{ root };
 	view->setModel(model);
 	view->setDragDropMode(QAbstractItemView::DragOnly);
 	view->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-	QObject::connect(view, &QListView::doubleClicked, [](const QModelIndex& i){
+	QObject::connect(view, &QListView::doubleClicked, [](const QModelIndex& i) {
 		default_run(i.data(Qt::UserRole).toString());
 	});
 	view->installEventFilter(new KeyPressHandler);
@@ -53,12 +53,12 @@ void load_stylesheet(QApplication& app) {
 }
 
 int main(int argc, char** argv) {
-	if (argc != 2 || !std::filesystem::is_directory(argv[1]))
+	if(argc != 2 || !std::filesystem::is_directory(argv[1]))
 		return 1;
 
 	QApplication::setApplicationName("RecentFileExplorer");
-	QApplication app{argc, argv};
-	QApplication::setWindowIcon(QIcon{":/icon.png"});
+	QApplication app{ argc, argv };
+	QApplication::setWindowIcon(QIcon{ ":/icon.png" });
 	load_stylesheet(app);
 
 	auto* view = create_recent_file_view(argv[1]);
