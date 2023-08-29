@@ -13,7 +13,15 @@
 class RecentFileModel : public QAbstractListModel {
 	Q_OBJECT
 
-	std::vector<std::filesystem::path> m_files;
+	struct Item {
+		std::filesystem::path path;
+		int tag = 0;
+		Item(std::filesystem::path p, int t) :
+				path(std::move(p)),
+				tag(t) {}
+	};
+
+	std::vector<Item> m_items;
 
 public:
 	explicit RecentFileModel(const std::filesystem::path& root, QObject* parent = nullptr);
@@ -23,6 +31,8 @@ public:
 	QStringList mimeTypes() const override;
 	QMimeData* mimeData(const QModelIndexList& indices) const override;
 	Qt::ItemFlags flags(const QModelIndex& index) const override;
+
+	bool setData(const QModelIndex&, const QVariant& value, int role) override;
 
 public slots:
 	void receive_files(std::vector<std::filesystem::path>);

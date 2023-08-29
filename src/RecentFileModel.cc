@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <QtGui/QFont>
+#include <QtGui/QBrush>
 #include <QtCore/QList>
 #include <QtCore/QUrl>
 
@@ -32,16 +33,24 @@ int RecentFileModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant RecentFileModel::data(const QModelIndex& index, int role) const {
-	const auto& path = m_files[index.row()];
+	const auto& item = m_items[index.row()];
 	switch(role) {
 		case Qt::DisplayRole:
-			return QString::fromStdString(path.filename().string());
+			return QString::fromStdString(item.path.filename().string());
 		case Qt::UserRole:
-			return QString::fromStdString(path.string());
-		case Qt::FontRole:
+			return QString::fromStdString(item.path.string());
+		case Qt::FontRole: {
 			QFont font;
 			font.setPointSize(16);
 			return font;
+		}
+		case Qt::BackgroundRole:
+			switch(item.tag) {
+				case 1:
+					return QBrush{ Qt::darkGreen };
+				case 2:
+					return QBrush{ Qt::darkRed };
+			}
 	}
 	return {};
 }
@@ -67,9 +76,25 @@ Qt::ItemFlags RecentFileModel::flags(const QModelIndex& index) const {
 	return QAbstractListModel::flags(index) | Qt::ItemIsDragEnabled;
 }
 
+bool RecentFileModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+	if(!hasIndex(index.row(), index.column(), index.parent()) || !value.isValid())
+		return false;
+
+	auto& item = m_items[index.row()];
+	if(role == Qt::BackgroundRole)
+		item.tag = value.toInt();
+	else
+		return false;
+
+	emit dataChanged(index, index, { role });
+
+	return true;
+}
+
 void RecentFileModel::receive_files(std::vector<std::filesystem::path> files) {
 	beginResetModel();
-	m_files = std::move(files);
+	for(auto& path : files)
+		m_items.emplace_back(std::move(path), 0);
 	endResetModel();
 }
 

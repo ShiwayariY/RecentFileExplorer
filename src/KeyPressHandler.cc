@@ -17,6 +17,15 @@ bool KeyPressHandler::eventFilter(QObject* o, QEvent* e) {
 	} else if(ke->matches(QKeySequence::Find)) {
 		find_item_dialog(view);
 		return true;
+	} else if(ke->key() == Qt::Key_0) {
+		set_tag(view, 0);
+		return true;
+	} else if(ke->key() == Qt::Key_1) {
+		set_tag(view, 1);
+		return true;
+	} else if(ke->key() == Qt::Key_2) {
+		set_tag(view, 2);
+		return true;
 	}
 	return false;
 }
@@ -46,4 +55,9 @@ void KeyPressHandler::find_item_dialog(QListView* view) const {
 			break;
 		}
 	}
+}
+
+void KeyPressHandler::set_tag(QListView* view, int tag) {
+	for(const auto& index : view->selectionModel()->selectedIndexes())
+		view->model()->setData(index, tag, Qt::BackgroundRole);
 }
